@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>悠哉局域网本机ip查看器和代理设置助手</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-5">
+<div class="max-w-xl mx-auto bg-white rounded-2xl shadow p-6">
+
+  <h1 class="text-2xl font-bold text-center mb-6">悠哉局域网本机ip查看器和代理设置助手</h1>
+
+  <p>• 苍井空配置文件局域网共享代理助手</p>
+  <!-- 本机局域网IP -->
+  <div class="mb-4">
+    <p class="text-sm text-slate-500">本机局域网IP</p>
+    <div id="localIp" class="text-lg font-semibold py-2">正在获取...</div>
+  </div>
+
+  <!-- 双按钮：TG一键设置 + 其他设备复制 -->
+  <div class="flex gap-3 mb-6">
+    <a id="tgProxyLink" class="flex-1 inline-block bg-blue-600 text-white px-4 py-3 rounded-lg text-center font-semibold pointer-events-none opacity-70">
+      本机TG一键设置TG✈️代理
+    </a>
+    <button onclick="copyTgLink()" class="flex-1 bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold text-sm">
+      点击复制到其它设备的TG收藏夹中发送后使用
+    </button>
+  </div>
+
+  <!-- 电脑系统代理信息 -->
+  <div class="mb-6">
+    <p class="text-sm text-slate-500">电脑代理信息（一键复制）</p>
+    <div class="flex gap-2 mt-1">
+      <input id="proxyText" value="" readonly
+        class="flex-1 border px-3 py-2 rounded">
+      <button onclick="copyProxy()"
+        class="bg-blue-600 text-white px-4 py-2 rounded">复制</button>
+    </div>
+  </div>
+
+  <!-- 专门用来复制的隐藏输入框 -->
+  <textarea id="copyTemp" class="opacity-0 fixed -z-10" style="width:1px;height:1px;"></textarea>
+
+  <!-- 设置说明 -->
+  <div class="bg-blue-50 p-4 rounded-xl text-sm">
+    <h3 class="font-bold mb-2">其它设备 点 手机当前连的 WIFI 设置里，打开手动代理然后填写对应信息。或其它设备设置 手动 代理填写信息</h3>
+    <p>• 代理主机/服务器地址：上面显示的IP</p>
+    <p>• 端口：9527</p>
+    <p>• 正常情况下局域网内的设备无需添加用户名和密码</p>
+    <p>• 因为苍井空里配置了跳过无需设置</p>
+    <p>• 用户名：youzai</p>
+    <p>• 密码：TGfuchenyouzaibot</p>
+    <p>• 电脑点右下角的网络中心里去找代理设置然后填写即可</p>
+    <p>• 分享代理的设备打开苍井空配置文件或软件里设置局域网共享即可使用</p>
+  </div>
+
+</div>
+
+<script>
+let currentIp = '';
+const port = 9527;
+const user = 'youzai';
+const pass = 'TGfuchenyouzaibot';
+
+// 获取本机局域网IP
+function getLocalIP() {
+  const pc = new RTCPeerConnection({ iceServers: [] });
+  pc.createDataChannel('');
+  pc.createOffer().then(offer => pc.setLocalDescription(offer));
+  pc.onicecandidate = e => {
+    if (!e.candidate) return;
+    const ip = e.candidate.candidate.split(' ')[4];
+    if (ip.includes('192.168')) {
+      currentIp = ip;
+      document.getElementById('localIp').innerText = ip;
+
+      // 生成 TG 代理跳转链接
+      const tgUrl = `tg://socks?server=${ip}&port=${port}&user=${user}&pass=${pass}`;
+      const a = document.getElementById('tgProxyLink');
+      a.href = tgUrl;
+      a.classList.remove('opacity-70', 'pointer-events-none');
+
+      // 生成电脑代理格式
+      const pcProxy = `${ip}:${port}  用户名：${user}  密码：${pass}`;
+      document.getElementById('proxyText').value = pcProxy;
+
+      pc.close();
+    }
+  };
+}
+
+// 复制电脑代理
+function copyProxy() {
+  if (!currentIp) {
+    alert('正在获取IP，请稍候');
+    return;
+  }
+  const inp = document.getElementById('proxyText');
+  inp.select();
+  document.execCommand('copy');
+  alert('已复制电脑代理信息');
+}
+
+// 复制 TG 代理链接（电脑手机都稳）
+function copyTgLink() {
+  if (!currentIp) {
+    alert('正在获取IP，请稍候');
+    return;
+  }
+  const tgUrl = `tg://socks?server=${currentIp}&port=${port}&user=${user}&pass=${pass}`;
+  
+  const temp = document.getElementById('copyTemp');
+  temp.value = tgUrl;
+  temp.select();
+  document.execCommand('copy');
+  
+  alert('已复制 TG 代理链接：\n' + tgUrl);
+}
+
+getLocalIP();
+</script>
+</body>
+</html>
